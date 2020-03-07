@@ -1,0 +1,425 @@
+<?xml version="1.0" encoding="utf-8"?>
+<search>
+  <entry>
+    <title>docker学习笔记</title>
+    <url>/2020/03/08/docker%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/</url>
+    <content><![CDATA[<h2 id="Ubuntu安装docker的步骤"><a href="#Ubuntu安装docker的步骤" class="headerlink" title="Ubuntu安装docker的步骤"></a>Ubuntu安装docker的步骤</h2><figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> 卸载旧版本</span></span><br><span class="line">apt-get remove docker docker-engine docker.io containerd runc</span><br><span class="line"><span class="meta">#</span><span class="bash"> 更新数据源</span></span><br><span class="line">apt-get update</span><br><span class="line"><span class="meta">#</span><span class="bash"> 安装所需依赖</span></span><br><span class="line">apt-get -y install apt-transport-https ca-certificates curl software-properties-common</span><br><span class="line"><span class="meta">#</span><span class="bash"> 安装 GPG 证书</span></span><br><span class="line">curl -fsSL http://mirrors.aliyun.com/docker-ce/linux/ubuntu/gpg | sudo apt-key add -</span><br><span class="line"><span class="meta">#</span><span class="bash"> 新增数据源</span></span><br><span class="line">add-apt-repository "deb [arch=amd64] http://mirrors.aliyun.com/docker-ce/linux/ubuntu $(lsb_release -cs) stable"</span><br><span class="line"><span class="meta">#</span><span class="bash"> 更新并安装 Docker CE</span></span><br><span class="line">apt-get update &amp;&amp; apt-get install -y docker-ce</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span><span class="bash">配置Docker镜像加速器：阿里云加速器</span></span><br><span class="line">sudo mkdir -p /etc/docker</span><br><span class="line">sudo tee /etc/docker/daemon.json &lt;&lt;-'EOF'</span><br><span class="line">&#123;</span><br><span class="line">  "registry-mirrors": ["加速地址"]</span><br><span class="line">&#125;</span><br><span class="line">EOF</span><br><span class="line">sudo systemctl daemon-reload</span><br><span class="line">sudo systemctl restart docker</span><br></pre></td></tr></table></figure>
+
+<h2 id="Docker-应用部署"><a href="#Docker-应用部署" class="headerlink" title="Docker 应用部署"></a>Docker 应用部署</h2><h3 id="一、部署MySQL"><a href="#一、部署MySQL" class="headerlink" title="一、部署MySQL"></a>一、部署MySQL</h3><ol>
+<li>搜索mysql镜像</li>
+</ol>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">docker search mysql</span><br></pre></td></tr></table></figure>
+
+<ol start="2">
+<li>拉取mysql镜像</li>
+</ol>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">docker pull mysql:5.6</span><br></pre></td></tr></table></figure>
+
+<ol start="3">
+<li>创建容器，设置端口映射、目录映射</li>
+</ol>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> 在/root目录下创建mysql目录用于存储mysql数据信息</span></span><br><span class="line">mkdir ~/mysql</span><br><span class="line">cd ~/mysql</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">docker run -id \</span><br><span class="line">-p 3307:3306 \</span><br><span class="line">--name=c_mysql \</span><br><span class="line">-v $PWD/conf:/etc/mysql/conf.d \</span><br><span class="line">-v $PWD/logs:/logs \</span><br><span class="line">-v $PWD/data:/var/lib/mysql \</span><br><span class="line">-e MYSQL_ROOT_PASSWORD=123456 \</span><br><span class="line">mysql:5.6</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>参数说明：<ul>
+<li><strong>-p 3307:3306</strong>：将容器的 3306 端口映射到宿主机的 3307 端口。</li>
+<li><strong>-v $PWD/conf:/etc/mysql/conf.d</strong>：将主机当前目录下的 conf/my.cnf 挂载到容器的 /etc/mysql/my.cnf。配置目录</li>
+<li><strong>-v $PWD/logs:/logs</strong>：将主机当前目录下的 logs 目录挂载到容器的 /logs。日志目录</li>
+<li><strong>-v $PWD/data:/var/lib/mysql</strong> ：将主机当前目录下的data目录挂载到容器的 /var/lib/mysql 。数据目录</li>
+<li><strong>-e MYSQL_ROOT_PASSWORD=123456：</strong>初始化 root 用户的密码。</li>
+</ul>
+</li>
+</ul>
+<ol>
+<li>进入容器，操作mysql</li>
+</ol>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">docker exec –it c_mysql /bin/bash</span><br></pre></td></tr></table></figure>
+
+<ol start="5">
+<li>使用外部机器连接容器中的mysql</li>
+</ol>
+<h3 id="二、部署Tomcat"><a href="#二、部署Tomcat" class="headerlink" title="二、部署Tomcat"></a>二、部署Tomcat</h3><ol>
+<li>搜索tomcat镜像</li>
+</ol>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">docker search tomcat</span><br></pre></td></tr></table></figure>
+
+<ol start="2">
+<li>拉取tomcat镜像</li>
+</ol>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">docker pull tomcat</span><br></pre></td></tr></table></figure>
+
+<ol start="3">
+<li>创建容器，设置端口映射、目录映射</li>
+</ol>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> 在/root目录下创建tomcat目录用于存储tomcat数据信息</span></span><br><span class="line">mkdir ~/tomcat</span><br><span class="line">cd ~/tomcat</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">docker run -id --name=c_tomcat \</span><br><span class="line">-p 8080:8080 \</span><br><span class="line">-v $PWD:/usr/local/tomcat/webapps \</span><br><span class="line">tomcat</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><p>参数说明：</p>
+<ul>
+<li><p><strong>-p 8080:8080：</strong>将容器的8080端口映射到主机的8080端口</p>
+<p><strong>-v $PWD:/usr/local/tomcat/webapps：</strong>将主机中当前目录挂载到容器的webapps</p>
+</li>
+</ul>
+</li>
+</ul>
+<ol start="4">
+<li>使用外部机器访问tomcat</li>
+</ol>
+<h3 id="三、部署Nginx"><a href="#三、部署Nginx" class="headerlink" title="三、部署Nginx"></a>三、部署Nginx</h3><ol>
+<li>搜索nginx镜像</li>
+</ol>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">docker search nginx</span><br></pre></td></tr></table></figure>
+
+<ol start="2">
+<li>拉取nginx镜像</li>
+</ol>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">docker pull nginx</span><br></pre></td></tr></table></figure>
+
+<ol start="3">
+<li>创建容器，设置端口映射、目录映射</li>
+</ol>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> 在/root目录下创建nginx目录用于存储nginx数据信息</span></span><br><span class="line">mkdir ~/nginx</span><br><span class="line">cd ~/nginx</span><br><span class="line">mkdir conf</span><br><span class="line">cd conf</span><br><span class="line"><span class="meta">#</span><span class="bash"> 在~/nginx/conf/下创建nginx.conf文件,粘贴下面内容</span></span><br><span class="line">vim nginx.conf</span><br></pre></td></tr></table></figure>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"></span><br><span class="line">user  nginx;</span><br><span class="line">worker_processes  1;</span><br><span class="line"></span><br><span class="line">error_log  /var/log/nginx/error.log warn;</span><br><span class="line">pid        /var/run/nginx.pid;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">events &#123;</span><br><span class="line">    worker_connections  1024;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">http &#123;</span><br><span class="line">    include       /etc/nginx/mime.types;</span><br><span class="line">    default_type  application/octet-stream;</span><br><span class="line"></span><br><span class="line">    log_format  main  '$remote_addr - $remote_user [$time_local] "$request" '</span><br><span class="line">                      '$status $body_bytes_sent "$http_referer" '</span><br><span class="line">                      '"$http_user_agent" "$http_x_forwarded_for"';</span><br><span class="line"></span><br><span class="line">    access_log  /var/log/nginx/access.log  main;</span><br><span class="line"></span><br><span class="line">    sendfile        on;</span><br><span class="line">    #tcp_nopush     on;</span><br><span class="line"></span><br><span class="line">    keepalive_timeout  65;</span><br><span class="line"></span><br><span class="line">    #gzip  on;</span><br><span class="line"></span><br><span class="line">    include /etc/nginx/conf.d/*.conf;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">docker run -id --name=c_nginx \</span><br><span class="line">-p 80:80 \</span><br><span class="line">-v $PWD/conf/nginx.conf:/etc/nginx/nginx.conf \</span><br><span class="line">-v $PWD/logs:/var/log/nginx \</span><br><span class="line">-v $PWD/html:/usr/share/nginx/html \</span><br><span class="line">nginx</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>参数说明：<ul>
+<li><strong>-p 80:80</strong>：将容器的 80端口映射到宿主机的 80 端口。</li>
+<li><strong>-v $PWD/conf/nginx.conf:/etc/nginx/nginx.conf</strong>：将主机当前目录下的 /conf/nginx.conf 挂载到容器的 :/etc/nginx/nginx.conf。配置目录</li>
+<li><strong>-v $PWD/logs:/var/log/nginx</strong>：将主机当前目录下的 logs 目录挂载到容器的/var/log/nginx。日志目录</li>
+</ul>
+</li>
+</ul>
+<ol start="4">
+<li><p>使用外部机器访问nginx</p>
+<h3 id="四、部署Redis"><a href="#四、部署Redis" class="headerlink" title="四、部署Redis"></a>四、部署Redis</h3></li>
+<li><p>搜索redis镜像</p>
+</li>
+</ol>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">docker search redis</span><br></pre></td></tr></table></figure>
+
+<ol start="2">
+<li>拉取redis镜像</li>
+</ol>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">docker pull redis:5.0</span><br></pre></td></tr></table></figure>
+
+<ol start="3">
+<li>创建容器，设置端口映射</li>
+</ol>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">docker run -id --name=c_redis -p 6379:6379 redis:5.0</span><br></pre></td></tr></table></figure>
+
+<ol start="4">
+<li>使用外部机器连接redis</li>
+</ol>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">./redis-cli.exe -h 192.168.149.135 -p 6379</span><br></pre></td></tr></table></figure>
+<h2 id="Dockerfile"><a href="#Dockerfile" class="headerlink" title="Dockerfile"></a>Dockerfile</h2><table>
+<thead>
+<tr>
+<th>关键字</th>
+<th>作用</th>
+<th>备注</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>FROM</td>
+<td>指定父镜像</td>
+<td>指定dockerfile基于那个image构建</td>
+</tr>
+<tr>
+<td>MAINTAINER</td>
+<td>作者信息</td>
+<td>用来标明这个dockerfile谁写的</td>
+</tr>
+<tr>
+<td>LABEL</td>
+<td>标签</td>
+<td>用来标明dockerfile的标签 可以使用Label代替Maintainer 最终都是在docker image基本信息中可以查看</td>
+</tr>
+<tr>
+<td>RUN</td>
+<td>执行命令</td>
+<td>执行一段命令 默认是/bin/sh 格式: RUN command 或者 RUN [“command” , “param1”,”param2”]</td>
+</tr>
+<tr>
+<td>CMD</td>
+<td>容器启动命令</td>
+<td>提供启动容器时候的默认命令 和ENTRYPOINT配合使用.格式 CMD command param1 param2 或者 CMD [“command” , “param1”,”param2”]</td>
+</tr>
+<tr>
+<td>ENTRYPOINT</td>
+<td>入口</td>
+<td>一般在制作一些执行就关闭的容器中会使用</td>
+</tr>
+<tr>
+<td>COPY</td>
+<td>复制文件</td>
+<td>build的时候复制文件到image中</td>
+</tr>
+<tr>
+<td>ADD</td>
+<td>添加文件</td>
+<td>build的时候添加文件到image中 不仅仅局限于当前build上下文 可以来源于远程服务</td>
+</tr>
+<tr>
+<td>ENV</td>
+<td>环境变量</td>
+<td>指定build时候的环境变量 可以在启动的容器的时候 通过-e覆盖 格式ENV name=value</td>
+</tr>
+<tr>
+<td>ARG</td>
+<td>构建参数</td>
+<td>构建参数 只在构建的时候使用的参数 如果有ENV 那么ENV的相同名字的值始终覆盖arg的参数</td>
+</tr>
+<tr>
+<td>VOLUME</td>
+<td>定义外部可以挂载的数据卷</td>
+<td>指定build的image那些目录可以启动的时候挂载到文件系统中 启动容器的时候使用 -v 绑定 格式 VOLUME [“目录”]</td>
+</tr>
+<tr>
+<td>EXPOSE</td>
+<td>暴露端口</td>
+<td>定义容器运行的时候监听的端口 启动容器的使用-p来绑定暴露端口 格式: EXPOSE 8080 或者 EXPOSE 8080/udp</td>
+</tr>
+<tr>
+<td>WORKDIR</td>
+<td>工作目录</td>
+<td>指定容器内部的工作目录 如果没有创建则自动创建 如果指定/ 使用的是绝对地址 如果不是/开头那么是在上一条workdir的路径的相对路径</td>
+</tr>
+<tr>
+<td>USER</td>
+<td>指定执行用户</td>
+<td>指定build或者启动的时候 用户 在RUN CMD ENTRYPONT执行的时候的用户</td>
+</tr>
+<tr>
+<td>HEALTHCHECK</td>
+<td>健康检查</td>
+<td>指定监测当前容器的健康监测的命令 基本上没用 因为很多时候 应用本身有健康监测机制</td>
+</tr>
+<tr>
+<td>ONBUILD</td>
+<td>触发器</td>
+<td>当存在ONBUILD关键字的镜像作为基础镜像的时候 当执行FROM完成之后 会执行 ONBUILD的命令 但是不影响当前镜像 用处也不怎么大</td>
+</tr>
+<tr>
+<td>STOPSIGNAL</td>
+<td>发送信号量到宿主机</td>
+<td>该STOPSIGNAL指令设置将发送到容器的系统调用信号以退出。</td>
+</tr>
+<tr>
+<td>SHELL</td>
+<td>指定执行脚本的shell</td>
+<td>指定RUN CMD ENTRYPOINT 执行命令的时候 使用的shell</td>
+</tr>
+<tr>
+<td>## Docker 私有仓库</td>
+<td></td>
+<td></td>
+</tr>
+</tbody></table>
+<h3 id="一、私有仓库搭建"><a href="#一、私有仓库搭建" class="headerlink" title="一、私有仓库搭建"></a>一、私有仓库搭建</h3><figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> 1、拉取私有仓库镜像 </span></span><br><span class="line">docker pull registry</span><br><span class="line"><span class="meta">#</span><span class="bash"> 2、启动私有仓库容器 </span></span><br><span class="line">docker run -id --name=registry -p 5000:5000 registry</span><br><span class="line"><span class="meta">#</span><span class="bash"> 3、打开浏览器 输入地址http://私有仓库服务器ip:5000/v2/_catalog，看到&#123;<span class="string">"repositories"</span>:[]&#125; 表示私有仓库 搭建成功</span></span><br><span class="line"><span class="meta">#</span><span class="bash"> 4、修改daemon.json   </span></span><br><span class="line">vim /etc/docker/daemon.json    </span><br><span class="line"><span class="meta">#</span><span class="bash"> 在上述文件中添加一个key，保存退出。此步用于让 docker 信任私有仓库地址；注意将私有仓库服务器ip修改为自己私有仓库服务器真实ip </span></span><br><span class="line">&#123;"insecure-registries":["私有仓库服务器ip:5000"]&#125; </span><br><span class="line"><span class="meta">#</span><span class="bash"> 5、重启docker 服务 </span></span><br><span class="line">systemctl restart docker</span><br><span class="line">docker start registry</span><br></pre></td></tr></table></figure>
+
+<h3 id="二、将镜像上传至私有仓库"><a href="#二、将镜像上传至私有仓库" class="headerlink" title="二、将镜像上传至私有仓库"></a>二、将镜像上传至私有仓库</h3><figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> 1、标记镜像为私有仓库的镜像     </span></span><br><span class="line">docker tag centos:7 私有仓库服务器IP:5000/centos:7</span><br><span class="line"> </span><br><span class="line"><span class="meta">#</span><span class="bash"> 2、上传标记的镜像     </span></span><br><span class="line">docker push 私有仓库服务器IP:5000/centos:7</span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="三、-从私有仓库拉取镜像"><a href="#三、-从私有仓库拉取镜像" class="headerlink" title="三、 从私有仓库拉取镜像"></a>三、 从私有仓库拉取镜像</h3><figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash">拉取镜像 </span></span><br><span class="line">docker pull 私有仓库服务器ip:5000/centos:7</span><br></pre></td></tr></table></figure>
+
+
+
+
+
+]]></content>
+      <tags>
+        <tag>ubuntu</tag>
+        <tag>docker</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>SpringMVC学习笔记</title>
+    <url>/2020/03/05/SpringMVC%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/</url>
+    <content><![CDATA[<h2 id="1-1-关于三层架构和-MVC"><a href="#1-1-关于三层架构和-MVC" class="headerlink" title="1.1 关于三层架构和 MVC"></a>1.1 关于三层架构和 MVC</h2><h3 id="1-1-1-三层架构"><a href="#1-1-1-三层架构" class="headerlink" title="1.1.1 三层架构"></a>1.1.1 三层架构</h3><h4 id="1-表现层"><a href="#1-表现层" class="headerlink" title="1. 表现层"></a>1. 表现层</h4><p>&emsp;&emsp;也就是我们常说的 web 层。它负责接收客户端请求，向客户端响应结果，通常客户端使用 http 协议请求 web 层，web 需要接收 http 请求，完成 http 响应。</p>
+<a id="more"></a>
+<p>&emsp;&emsp;表现层包括展示层和控制层:控制层负责接收请求，展示层负责结果的展示。<br>&emsp;&emsp;表现层依赖业务层，接收到客户端请求一般会调用业务层进行业务处理，并将处理结果响应给客户端。 表现层的设计一般都使用 MVC 模型。(MVC 是表现层的设计模型，和其他层没有关系).</p>
+<h4 id="2-业务层"><a href="#2-业务层" class="headerlink" title="2. 业务层"></a>2. 业务层</h4><p>&emsp;&emsp;也就是我们常说的 service 层。它负责业务逻辑处理，和我们开发项目的需求息息相关。web 层依赖业 务层，但是业务层不依赖 web 层。<br>&emsp;&emsp;业务层在业务处理时可能会依赖持久层，如果要对数据持久化需要保证事务一致性。(也就是我们说的， 事务应该放到业务层来控制)。</p>
+<h4 id="3-持久层"><a href="#3-持久层" class="headerlink" title="3. 持久层"></a>3. 持久层</h4><p>&emsp;&emsp;也就是我们是常说的 dao 层。负责数据持久化，包括数据层即数据库和数据访问层，数据库是对数据进 行持久化的载体，数据访问层是业务层和持久层交互的接口，业务层需要通过数据访问层将数据持久化到数据库中。通俗的讲，持久层就是和数据库交互，对数据库表进行曾删改查的。</p>
+<h3 id="1-1-2-MVC模型"><a href="#1-1-2-MVC模型" class="headerlink" title="1.1.2 MVC模型"></a>1.1.2 MVC模型</h3><h4 id="1-Model-模型"><a href="#1-Model-模型" class="headerlink" title="1. Model(模型):"></a>1. Model(模型):</h4><p>&emsp;&emsp;通常指的就是我们的数据模型。作用一般情况下用于封装数据。</p>
+<h4 id="2-View-视图"><a href="#2-View-视图" class="headerlink" title="2. View(视图):"></a>2. View(视图):</h4><p>&emsp;&emsp;通常指的就是我们的 jsp 或者 html。作用一般就是展示数据的。 通常视图是依据模型数据创建的。</p>
+<h4 id="3-Controller-控制器"><a href="#3-Controller-控制器" class="headerlink" title="3. Controller(控制器):"></a>3. Controller(控制器):</h4><p>&emsp;&emsp;是应用程序中处理用户交互的部分。作用一般就是处理程序逻辑的。</p>
+<h3 id="1-2-SpringMVC概述"><a href="#1-2-SpringMVC概述" class="headerlink" title="1.2 SpringMVC概述"></a>1.2 SpringMVC概述</h3><p>&emsp;&emsp;SpringMVC 是一种基于 Java 的实现 MVC 设计模型的请求驱动类型的轻量级 Web 框架。<br><img src="http://q6opupbjc.bkt.clouddn.com/springmvc1.png" alt="position"></p>
+<h2 id="2-1-SpringMVC入门"><a href="#2-1-SpringMVC入门" class="headerlink" title="2.1 SpringMVC入门"></a>2.1 SpringMVC入门</h2><h3 id="2-1-1-入门案例"><a href="#2-1-1-入门案例" class="headerlink" title="2.1.1 入门案例"></a>2.1.1 入门案例</h3><h4 id="1-配置核心控制器"><a href="#1-配置核心控制器" class="headerlink" title="1. 配置核心控制器"></a>1. 配置核心控制器</h4><figure class="highlight xml"><table><tr><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">servlet</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">servlet-name</span>&gt;</span>SpringMVCDispatcherServlet<span class="tag">&lt;/<span class="name">servlet-name</span>&gt;</span> </span><br><span class="line">    <span class="tag">&lt;<span class="name">servlet-class</span>&gt;</span></span><br><span class="line">        org.springframework.web.servlet.DispatcherServlet</span><br><span class="line">    <span class="tag">&lt;/<span class="name">servlet-class</span>&gt;</span></span><br><span class="line">    <span class="comment">&lt;!-- 配置初始化参数，用于读取 SpringMVC 的配置文件 --&gt;</span> </span><br><span class="line">    <span class="tag">&lt;<span class="name">init-param</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">param-name</span>&gt;</span>contextConfigLocation<span class="tag">&lt;/<span class="name">param-name</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">param-value</span>&gt;</span>classpath:SpringMVC.xml<span class="tag">&lt;/<span class="name">param-value</span>&gt;</span> </span><br><span class="line">    <span class="tag">&lt;/<span class="name">init-param</span>&gt;</span></span><br><span class="line">    <span class="comment">&lt;!-- 配置 servlet 的对象的创建时间点:应用加载时创建。--&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">load-on-startup</span>&gt;</span>1<span class="tag">&lt;/<span class="name">load-on-startup</span>&gt;</span> </span><br><span class="line"><span class="tag">&lt;/<span class="name">servlet</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<h4 id="2-创建SpringMVC配置文件"><a href="#2-创建SpringMVC配置文件" class="headerlink" title="2. 创建SpringMVC配置文件"></a>2. 创建SpringMVC配置文件</h4><figure class="highlight xml"><table><tr><td class="code"><pre><span class="line"><span class="comment">&lt;!-- 配置创建 spring 容器要扫描的包 --&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">context:component-scan</span> <span class="attr">base-package</span>=<span class="string">"com.itheima"</span>/&gt;</span></span><br><span class="line"><span class="comment">&lt;!-- 配置视图解析器 --&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">bean</span> <span class="attr">id</span>=<span class="string">"internalResourceViewResolver"</span> <span class="attr">class</span>=<span class="string">"org.springframework.web.servlet.view.InternalResourceViewResolver"</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">property</span> <span class="attr">name</span>=<span class="string">"prefix"</span> <span class="attr">value</span>=<span class="string">"/WEB-INF/pages/"</span>/&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">property</span> <span class="attr">name</span>=<span class="string">"suffix"</span> <span class="attr">value</span>=<span class="string">".jsp"</span>/&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">bean</span>&gt;</span></span><br><span class="line"><span class="comment">&lt;!-- 注解支持 --&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">mvc:annotation-driven</span>/&gt;</span></span><br></pre></td></tr></table></figure>
+<h4 id="3-编写控制器并使用注解配置"><a href="#3-编写控制器并使用注解配置" class="headerlink" title="3. 编写控制器并使用注解配置"></a>3. 编写控制器并使用注解配置</h4><figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="meta">@Controller</span>(<span class="string">"helloController"</span>)</span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">HelloController</span> </span>&#123;</span><br><span class="line">    <span class="meta">@RequestMapping</span>(<span class="string">"/hello"</span>) </span><br><span class="line">    <span class="function"><span class="keyword">public</span> String <span class="title">sayHello</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        System.out.println(<span class="string">"HelloController 的 sayHello 方法执行了。。。。"</span>);</span><br><span class="line">        <span class="keyword">return</span> <span class="string">"success"</span>; </span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h4 id="4-案例执行过程"><a href="#4-案例执行过程" class="headerlink" title="4. 案例执行过程"></a>4. 案例执行过程</h4><ul>
+<li>服务器启动，应用被加载。读取到 web.xml 中的配置创建 spring 容器并且初始化容器中的对象。</li>
+<li>浏览器发送请求，被 DispatherServlet 捕获，该 Servlet 并不处理请求，而是把请求转发出去。转发 的路径是根据请求 URL，匹配@RequestMapping 中的内容。</li>
+<li>匹配到了后，执行对应方法。该方法有一个返回值。</li>
+<li>根据方法的返回值，借助 InternalResourceViewResolver 找到对应的结果视图。 </li>
+<li>渲染结果视图，响应浏览器。<h3 id="2-1-2-入门案例中涉及的组件"><a href="#2-1-2-入门案例中涉及的组件" class="headerlink" title="2.1.2 入门案例中涉及的组件"></a>2.1.2 入门案例中涉及的组件</h3><h4 id="1-DispatcherServlet-前端控制器"><a href="#1-DispatcherServlet-前端控制器" class="headerlink" title="1. DispatcherServlet:前端控制器"></a>1. DispatcherServlet:前端控制器</h4>&emsp;&emsp;用户请求到达前端控制器，它就相当于 mvc 模式中的 c，dispatcherServlet 是整个流程控制的中心，由它调用其它组件处理用户的请求，dispatcherServlet 的存在降低了组件之间的耦合性。<h4 id="2-HandlerMapping-处理器映射器"><a href="#2-HandlerMapping-处理器映射器" class="headerlink" title="2. HandlerMapping:处理器映射器"></a>2. HandlerMapping:处理器映射器</h4>&emsp;&emsp;HandlerMapping 负责根据用户请求找到 Handler 即处理器，SpringMVC 提供了不同的映射器实现不同的 映射方式，例如:配置文件方式，实现接口方式，注解方式等。<h4 id="3-Handler-处理器"><a href="#3-Handler-处理器" class="headerlink" title="3. Handler:处理器"></a>3. Handler:处理器</h4>&emsp;&emsp; 它就是我们开发中要编写的具体业务控制器。由 DispatcherServlet 把用户请求转发到 Handler。由 Handler 对具体的用户请求进行处理。<h4 id="4-View-Resolver-视图解析器"><a href="#4-View-Resolver-视图解析器" class="headerlink" title="4. View Resolver:视图解析器"></a>4. View Resolver:视图解析器</h4>&emsp;&emsp; View Resolver 负责将处理结果生成 View 视图，View Resolver 首先根据逻辑视图名解析成物理视图名即具体的页面地址，再生成 View 视图对象，最后对 View 进行渲染将处理结果通过页面展示给用户。<h4 id="5-View-视图"><a href="#5-View-视图" class="headerlink" title="5. View:视图"></a>5. View:视图</h4>&emsp;&emsp; 一般情况下需要通过页面标签或页面模版技术将模型数据通过页面展示给用户，需要由程序员根据业务需求开 发具体的页面。<h3 id="2-1-3-RequestMapping-注解"><a href="#2-1-3-RequestMapping-注解" class="headerlink" title="2.1.3 RequestMapping 注解"></a>2.1.3 RequestMapping 注解</h3><h4 id="1-属性"><a href="#1-属性" class="headerlink" title="1. 属性"></a>1. 属性</h4></li>
+<li>value:用于指定请求的 URL。它和 path 属性的作用是一样的。</li>
+<li>method:用于指定请求的方式。（GET/POST)</li>
+<li>params:用于指定限制请求参数的条件。它支持简单的表达式。要求请求参数的 key 和 value 必须和 配置的一模一样。<h3 id="2-2-1-请求参数乱码"><a href="#2-2-1-请求参数乱码" class="headerlink" title="2.2.1 请求参数乱码"></a>2.2.1 请求参数乱码</h3><figure class="highlight xml"><table><tr><td class="code"><pre><span class="line"><span class="comment">&lt;!-- 配置 springMVC 编码过滤器 --&gt;</span> </span><br><span class="line"><span class="tag">&lt;<span class="name">filter</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">filter-name</span>&gt;</span>CharacterEncodingFilter<span class="tag">&lt;/<span class="name">filter-name</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">filter-class</span>&gt;</span> org.springframework.web.filter.CharacterEncodingFilter<span class="tag">&lt;/<span class="name">filter-class</span>&gt;</span></span><br><span class="line">    <span class="comment">&lt;!-- 设置过滤器中的属性值 --&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">init-param</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">param-name</span>&gt;</span>encoding<span class="tag">&lt;/<span class="name">param-name</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">param-value</span>&gt;</span>UTF-8<span class="tag">&lt;/<span class="name">param-value</span>&gt;</span> </span><br><span class="line">    <span class="tag">&lt;/<span class="name">init-param</span>&gt;</span></span><br><span class="line">    <span class="comment">&lt;!-- 启动过滤器 --&gt;</span> </span><br><span class="line">    <span class="tag">&lt;<span class="name">init-param</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">param-name</span>&gt;</span>forceEncoding<span class="tag">&lt;/<span class="name">param-name</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">param-value</span>&gt;</span>true<span class="tag">&lt;/<span class="name">param-value</span>&gt;</span> </span><br><span class="line">    <span class="tag">&lt;/<span class="name">init-param</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">filter</span>&gt;</span></span><br><span class="line"><span class="comment">&lt;!-- 过滤所有请求 --&gt;</span> </span><br><span class="line"><span class="tag">&lt;<span class="name">filter-mapping</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">filter-name</span>&gt;</span>CharacterEncodingFilter<span class="tag">&lt;/<span class="name">filter-name</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">url-pattern</span>&gt;</span>/*<span class="tag">&lt;/<span class="name">url-pattern</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">filter-mapping</span>&gt;</span></span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+]]></content>
+      <categories>
+        <category>java</category>
+      </categories>
+      <tags>
+        <tag>java</tag>
+        <tag>框架</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Spring学习笔记</title>
+    <url>/2020/03/05/Spring%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/</url>
+    <content><![CDATA[<h2 id="1-1-IOC的概念和作用"><a href="#1-1-IOC的概念和作用" class="headerlink" title="1.1 IOC的概念和作用"></a>1.1 IOC的概念和作用</h2><h3 id="1-1-1-控制反转-Inversion-Of-Contorl"><a href="#1-1-1-控制反转-Inversion-Of-Contorl" class="headerlink" title="1.1.1 控制反转-Inversion Of Contorl"></a>1.1.1 控制反转-Inversion Of Contorl</h3><p>​    控制反转（IOC）把创建对象的权利交给框架，是框架的重要特征，并非面向对象编程的专用术语。它包括依赖注入（Dependency Injection）和依赖查找（Dependency Lookup）。</p>
+<p>​    ioc的作用：消减计算机程序的耦合（解除我们代码中的依赖关系）。</p>
+<a id="more"></a>
+
+<h3 id="1-1-2-Spring中的基于XML的IOC配置"><a href="#1-1-2-Spring中的基于XML的IOC配置" class="headerlink" title="1.1.2 Spring中的基于XML的IOC配置"></a>1.1.2 Spring中的基于XML的IOC配置</h3><h4 id="1-bean标签"><a href="#1-bean标签" class="headerlink" title="1. bean标签:"></a>1. bean标签:</h4><p>​    bean标签:用于配置让spring创建对象，并且存入ioc容器之中<br>​    id 属性:对象的唯一标识。<br>​    class 属性:指定要创建对象的全限定类名<br>​    scope:指定对象的作用范围。</p>
+<ul>
+<li><p>​    singleton :默认值，单例的.</p>
+</li>
+<li><p>​    prototype :多例的.</p>
+</li>
+</ul>
+<figure class="highlight xml"><table><tr><td class="code"><pre><span class="line"><span class="comment">&lt;!-- 第一种方式:使用默认无参构造函数 </span></span><br><span class="line"><span class="comment">	在默认情况下:它会根据默认无参构造函数来创建类对象。如果 bean 中没有默认无参构造函数，将会创建失败。--&gt;</span> </span><br><span class="line"><span class="tag">&lt;<span class="name">bean</span> <span class="attr">id</span>=<span class="string">"accountService"</span> <span class="attr">class</span>=<span class="string">"com.slovebarca.service.impl.AccountServiceImpl"</span>&gt;</span></span><br><span class="line"><span class="comment">&lt;!-- 第二种方式:spring 管理静态工厂-使用静态工厂的方法创建对象</span></span><br><span class="line"><span class="comment">	使用 StaticFactory 类中的静态方法 createAccountService 创建对象，并存入 spring 容器</span></span><br><span class="line"><span class="comment">	id 属性:指定 bean 的 id，用于从容器中获取</span></span><br><span class="line"><span class="comment">	class 属性:指定静态工厂的全限定类名 </span></span><br><span class="line"><span class="comment">	factory-method 属性:指定生产对象的静态方法--&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">bean</span> <span class="attr">id</span>=<span class="string">"accountService"</span> <span class="attr">class</span>=<span class="string">"com.itheima.factory.StaticFactory"</span> </span></span><br><span class="line"><span class="tag">      <span class="attr">factory-method</span>=<span class="string">"createAccountService"</span>&gt;</span><span class="tag">&lt;/<span class="name">bean</span>&gt;</span></span><br><span class="line"><span class="comment">&lt;!-- 第三种方式:spring 管理实例工厂-使用实例工厂的方法创建对象</span></span><br><span class="line"><span class="comment">	先把工厂的创建交给 spring 来管理。</span></span><br><span class="line"><span class="comment">	然后在使用工厂的 bean 来调用里面的方法 </span></span><br><span class="line"><span class="comment">	factory-bean 属性:用于指定实例工厂 bean 的 id。</span></span><br><span class="line"><span class="comment">	factory-method 属性:用于指定实例工厂中创建对象的方法。--&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">bean</span> <span class="attr">id</span>=<span class="string">"instancFactory"</span> <span class="attr">class</span>=<span class="string">"com.itheima.factory.InstanceFactory"</span>&gt;</span><span class="tag">&lt;/<span class="name">bean</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">bean</span> <span class="attr">id</span>=<span class="string">"accountService"</span> <span class="attr">factory-bean</span>=<span class="string">"instancFactory"</span> </span></span><br><span class="line"><span class="tag">        <span class="attr">factory-method</span>=<span class="string">"createAccountService"</span>&gt;</span><span class="tag">&lt;/<span class="name">bean</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<h4 id="2-ApplicationContext接口"><a href="#2-ApplicationContext接口" class="headerlink" title="2. ApplicationContext接口"></a>2. ApplicationContext接口</h4><p>​    ClassPathXmlApplicationContext:它是从类的根路径下加载配置文件 推荐使用这种。</p>
+<p>​    FileSystemXmlApplicationContext: 它是从磁盘路径上加载配置文件，配置文件可以在磁盘的任意位置。</p>
+<p>​    AnnotationConfigApplicationContext:当我们使用注解配置容器对象时，需要使用此类来创建 spring 容器。它用来读取注解。</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="comment">// 1.使用 ApplicationContext 接口，就是在获取 spring 容器</span></span><br><span class="line">ApplicationContext ac = <span class="keyword">new</span> ClasspathXmlApplicationContext(<span class="string">"bean.xml"</span>); </span><br><span class="line"><span class="comment">// 2.根据 bean 的 id 获取对象</span></span><br><span class="line">IAccountService accountService = (IAccountService) ac.getBean(<span class="string">"accountService"</span>);	</span><br><span class="line">IAccountService accountService = ac.getBean(<span class="string">"accountService"</span>,IAccountService<span class="class">.<span class="keyword">class</span>)</span>;</span><br></pre></td></tr></table></figure>
+
+<h4 id="3-构造函数注入"><a href="#3-构造函数注入" class="headerlink" title="3. 构造函数注入"></a>3. 构造函数注入</h4><figure class="highlight xml"><table><tr><td class="code"><pre><span class="line"><span class="comment">&lt;!-- 使用构造函数的方式，给 service 中的属性传值 </span></span><br><span class="line"><span class="comment">	要求:类中需要提供一个对应参数列表的构造函数。</span></span><br><span class="line"><span class="comment">	constructor-arg</span></span><br><span class="line"><span class="comment">		name:指定参数在构造函数中的名称</span></span><br><span class="line"><span class="comment">		value:它能赋的值是基本数据类型和 String 类型</span></span><br><span class="line"><span class="comment">		ref:它能赋的值是其他 bean 类型，也就是说，必须得是在配置文件中配置过的 bean --&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">bean</span> <span class="attr">id</span>=<span class="string">"accountService"</span> <span class="attr">class</span>=<span class="string">"com.slovebarca.service.impl.AccountServiceImpl"</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">constructor-arg</span> <span class="attr">name</span>=<span class="string">"name"</span> <span class="attr">value</span>=<span class="string">"zhangsan"</span>&gt;</span><span class="tag">&lt;/<span class="name">constructor-arg</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">constructor-arg</span> <span class="attr">name</span>=<span class="string">"age"</span> <span class="attr">value</span>=<span class="string">"18"</span>&gt;</span><span class="tag">&lt;/<span class="name">constructor-arg</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">constructor-arg</span> <span class="attr">name</span>=<span class="string">"birthday"</span> <span class="attr">ref</span>=<span class="string">"now"</span>&gt;</span><span class="tag">&lt;/<span class="name">constructor-arg</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">bean</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">bean</span> <span class="attr">id</span>=<span class="string">"now"</span> <span class="attr">class</span>=<span class="string">"java.util.Date"</span>&gt;</span><span class="tag">&lt;/<span class="name">bean</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<h4 id="4-set方法注入"><a href="#4-set方法注入" class="headerlink" title="4. set方法注入"></a>4. set方法注入</h4><figure class="highlight xml"><table><tr><td class="code"><pre><span class="line"><span class="comment">&lt;!-- 通过配置文件给 bean 中的属性传值:使用 set 方法的方式 </span></span><br><span class="line"><span class="comment">	property</span></span><br><span class="line"><span class="comment">		name:找的是类中 set 方法后面的部分 </span></span><br><span class="line"><span class="comment">		ref:给属性赋值是其他 bean 类型的 </span></span><br><span class="line"><span class="comment">		value:给属性赋值是基本数据类型和 string 类型的 --&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">bean</span> <span class="attr">id</span>=<span class="string">"accountService"</span> <span class="attr">class</span>=<span class="string">"com.itheima.service.impl.AccountServiceImpl"</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">property</span> <span class="attr">name</span>=<span class="string">"name"</span> <span class="attr">value</span>=<span class="string">"test"</span>&gt;</span><span class="tag">&lt;/<span class="name">property</span>&gt;</span> </span><br><span class="line">  <span class="tag">&lt;<span class="name">property</span> <span class="attr">name</span>=<span class="string">"age"</span> <span class="attr">value</span>=<span class="string">"21"</span>&gt;</span><span class="tag">&lt;/<span class="name">property</span>&gt;</span> </span><br><span class="line">  <span class="tag">&lt;<span class="name">property</span> <span class="attr">name</span>=<span class="string">"birthday"</span> <span class="attr">ref</span>=<span class="string">"now"</span>&gt;</span><span class="tag">&lt;/<span class="name">property</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">bean</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">bean</span> <span class="attr">id</span>=<span class="string">"now"</span> <span class="attr">class</span>=<span class="string">"java.util.Date"</span>&gt;</span><span class="tag">&lt;/<span class="name">bean</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<h4 id="5-注入集合属性"><a href="#5-注入集合属性" class="headerlink" title="5. 注入集合属性"></a>5. 注入集合属性</h4><figure class="highlight xml"><table><tr><td class="code"><pre><span class="line"><span class="comment">&lt;!-- 注入集合数据</span></span><br><span class="line"><span class="comment">	List 结构的: array,list,set</span></span><br><span class="line"><span class="comment">	Map 结构的 map,entry,props,prop --&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">bean</span> <span class="attr">id</span>=<span class="string">"accountService"</span> <span class="attr">class</span>=<span class="string">"com.itheima.service.impl.AccountServiceImpl"</span>&gt;</span> </span><br><span class="line">  <span class="comment">&lt;!-- 在注入集合数据时，只要结构相同，标签可以互换 --&gt;</span></span><br><span class="line">	<span class="comment">&lt;!-- 给数组注入数据 --&gt;</span> </span><br><span class="line">  <span class="tag">&lt;<span class="name">property</span> <span class="attr">name</span>=<span class="string">"myStrs"</span>&gt;</span></span><br><span class="line">		<span class="tag">&lt;<span class="name">set</span>&gt;</span></span><br><span class="line">    	<span class="tag">&lt;<span class="name">value</span>&gt;</span>AAA<span class="tag">&lt;/<span class="name">value</span>&gt;</span></span><br><span class="line">    	<span class="tag">&lt;<span class="name">value</span>&gt;</span>BBB<span class="tag">&lt;/<span class="name">value</span>&gt;</span></span><br><span class="line">   	 <span class="tag">&lt;<span class="name">value</span>&gt;</span>CCC<span class="tag">&lt;/<span class="name">value</span>&gt;</span></span><br><span class="line">		<span class="tag">&lt;/<span class="name">set</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;/<span class="name">property</span>&gt;</span></span><br><span class="line">	<span class="comment">&lt;!-- 注入 list 集合数据 --&gt;</span> </span><br><span class="line">  <span class="tag">&lt;<span class="name">property</span> <span class="attr">name</span>=<span class="string">"myList"</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="name">array</span>&gt;</span></span><br><span class="line">	   <span class="tag">&lt;<span class="name">value</span>&gt;</span>AAA<span class="tag">&lt;/<span class="name">value</span>&gt;</span></span><br><span class="line">       <span class="tag">&lt;<span class="name">value</span>&gt;</span>BBB<span class="tag">&lt;/<span class="name">value</span>&gt;</span></span><br><span class="line">       <span class="tag">&lt;<span class="name">value</span>&gt;</span>CCC<span class="tag">&lt;/<span class="name">value</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">array</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;/<span class="name">property</span>&gt;</span></span><br><span class="line">	<span class="comment">&lt;!-- 注入 Map 数据 --&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="name">property</span> <span class="attr">name</span>=<span class="string">"myMap"</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">props</span>&gt;</span></span><br><span class="line">		<span class="tag">&lt;<span class="name">prop</span> <span class="attr">key</span>=<span class="string">"testA"</span>&gt;</span>aaa<span class="tag">&lt;/<span class="name">prop</span>&gt;</span></span><br><span class="line">    	<span class="tag">&lt;<span class="name">prop</span> <span class="attr">key</span>=<span class="string">"testB"</span>&gt;</span>bbb<span class="tag">&lt;/<span class="name">prop</span>&gt;</span></span><br><span class="line">		<span class="tag">&lt;/<span class="name">props</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;/<span class="name">property</span>&gt;</span></span><br><span class="line">	<span class="comment">&lt;!-- 注入 properties 数据 --&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">property</span> <span class="attr">name</span>=<span class="string">"myProps"</span>&gt;</span> </span><br><span class="line">    <span class="tag">&lt;<span class="name">map</span>&gt;</span></span><br><span class="line">	  <span class="tag">&lt;<span class="name">entry</span> <span class="attr">key</span>=<span class="string">"testA"</span> <span class="attr">value</span>=<span class="string">"aaa"</span>&gt;</span><span class="tag">&lt;/<span class="name">entry</span>&gt;</span> </span><br><span class="line">      <span class="tag">&lt;<span class="name">entry</span> <span class="attr">key</span>=<span class="string">"testB"</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">value</span>&gt;</span>bbb<span class="tag">&lt;/<span class="name">value</span>&gt;</span></span><br><span class="line">	  <span class="tag">&lt;/<span class="name">entry</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">map</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;/<span class="name">property</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">bean</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="1-1-3-Spring中的基于注解的IOC配置"><a href="#1-1-3-Spring中的基于注解的IOC配置" class="headerlink" title="1.1.3 Spring中的基于注解的IOC配置"></a>1.1.3 Spring中的基于注解的IOC配置</h3><figure class="highlight xml"><table><tr><td class="code"><pre><span class="line"><span class="comment">&lt;!-- 告知 spring 创建容器时要扫描的包 --&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">context:component-scan</span> <span class="attr">base-package</span>=<span class="string">"com.slovebarca"</span>&gt;</span><span class="tag">&lt;/<span class="name">context:component-scan</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<h4 id="1-Component"><a href="#1-Component" class="headerlink" title="1. @Component"></a>1. @Component</h4><p>​    作用：把资源让 spring 来管理。相当于在 xml 中配置一个 bean。</p>
+<p>​    属性：value：指定 bean 的 id。如果不指定 value 属性，默认 bean 的 id 是当前类的类名。首字母小写。</p>
+<p>​    @Controller @Service @Repository：三个注解都是针对一个的衍生注解，他们的作用及属性都是一模一样的。</p>
+<ul>
+<li><p>​    @Controller: 一般用于表现层的注解。</p>
+</li>
+<li><p>​    @Service: 一般用于业务层的注解。</p>
+</li>
+<li><p>​    @Repository: 一般用于持久层的注解。</p>
+</li>
+</ul>
+<h4 id="2-Autowired"><a href="#2-Autowired" class="headerlink" title="2. @Autowired"></a>2. @Autowired</h4><p>​    作用: 自动按照类型注入。当使用注解注入属性时，set 方法可以省略。它只能注入其他 bean 类型。当有多个类型匹配时，使用要注入的对象变量名称作为 bean 的 id，在 spring 容器查找，找到了也可以注入成功。找不到就报错。相当于:</p>
+<h4 id="3-Qualifier"><a href="#3-Qualifier" class="headerlink" title="3. @Qualifier"></a>3. @Qualifier</h4><p>​    作用：在自动按照类型注入的基础之上，再按照 Bean 的 id 注入。它在给字段注入时不能独立使用，必须和@Autowire 一起使用;但是给方法参数注入时，可以独立使用。</p>
+<p>​    属性：value：指定 bean 的 id。</p>
+<h4 id="4-Resource"><a href="#4-Resource" class="headerlink" title="4. @Resource"></a>4. @Resource</h4><p>​    作用：直接按照 Bean 的 id 注入。它也只能注入其他 bean 类型。</p>
+<p>​    属性：name：指定 bean 的 id。</p>
+<h4 id="5-Value"><a href="#5-Value" class="headerlink" title="5. @Value"></a>5. @Value</h4><p>​    作用：注入基本数据类型和 String 类型数据的。</p>
+<p>​    属性：value：用于指定值。</p>
+<h4 id="6-Scope"><a href="#6-Scope" class="headerlink" title="6. @Scope"></a>6. @Scope</h4><p>​    作用：指定 bean 的作用范围。</p>
+<p>​    属性：value：指定范围的值。（singleton prototype request session globalsession）</p>
+<h4 id="7-Configuration"><a href="#7-Configuration" class="headerlink" title="7. @Configuration"></a>7. @Configuration</h4><p>​    作用：用于指定当前类是一个 spring 配置类，当创建容器时会从该类上加载注解。获取容器时需要使用AnnotationApplicationContext(有@Configuration 注解的类.class)。</p>
+<p>​    属性：value：用于指定配置类的字节码</p>
+<h4 id="8-ComponentScan"><a href="#8-ComponentScan" class="headerlink" title="8. @ComponentScan"></a>8. @ComponentScan</h4><p>​    作用：用于指定 spring 在初始化容器时要扫描的包。</p>
+<p>​    属性：basePackages：用于指定要扫描的包。和该注解中的 value 属性作用一样。</p>
+<h4 id="9-Bean"><a href="#9-Bean" class="headerlink" title="9. @Bean"></a>9. @Bean</h4><p>​    作用：该注解只能写在方法上，表明使用此方法创建一个对象，并且放入 spring 容器。</p>
+<p>​    属性：name：给当前@Bean 注解方法创建的对象指定一个名称(即 bean 的 id)。</p>
+<h4 id="10-PropertySource"><a href="#10-PropertySource" class="headerlink" title="10. @PropertySource"></a>10. @PropertySource</h4><p>​    作用：用于加载.properties 文件中的配置。例如我们配置数据源时，可以把连接数据库的信息写到 properties 配置文件中，就可以使用此注解指定 properties 配置文件的位置。</p>
+<p>​    属性：value[ ]:用于指定 properties 文件位置。如果是在类路径下，需要写上 classpath:</p>
+<h4 id="11-Import"><a href="#11-Import" class="headerlink" title="11. @Import"></a>11. @Import</h4><p>​    作用：用于导入其他配置类，在引入其他配置类时，可以不用再写@Configuration 注解。当然，写上也没问题。</p>
+<p>​    属性：value[ ]:用于指定其他配置类的字节码。</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="comment">//注解示例</span></span><br><span class="line"><span class="meta">@Configuration</span></span><br><span class="line"><span class="meta">@ComponentScan</span>(<span class="string">"com.slovebarca"</span>)</span><br><span class="line"><span class="meta">@Import</span>(&#123;JdbcConfig<span class="class">.<span class="keyword">class</span>&#125;)</span></span><br><span class="line">@PropertySource("classpath:jdbcConfig.properties")</span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">SpringConfiguration</span> </span>&#123;</span><br><span class="line">		</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">JdbcConfig</span> </span>&#123;</span><br><span class="line">  </span><br><span class="line">	<span class="meta">@Value</span>(<span class="string">"$&#123;jdbc.driver&#125;"</span>)</span><br><span class="line">  	<span class="keyword">private</span> String driver;</span><br><span class="line">  	<span class="meta">@Vaule</span>(<span class="string">"$&#123;jdbc.url&#125;"</span>)</span><br><span class="line">  	<span class="keyword">private</span> String url;</span><br><span class="line"> 	<span class="meta">@Value</span>(<span class="string">"$&#123;jdbc.username&#125;"</span>) </span><br><span class="line"> 	<span class="keyword">private</span> String username;</span><br><span class="line">	<span class="meta">@Value</span>(<span class="string">"$&#123;jdbc.password&#125;"</span>) </span><br><span class="line">  	<span class="keyword">private</span> String password;</span><br><span class="line">  </span><br><span class="line">	<span class="meta">@Bean</span>(name=<span class="string">"dataSource"</span>)</span><br><span class="line">  	<span class="function"><span class="keyword">public</span> DataSource <span class="title">createDataSource</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    	<span class="keyword">try</span> &#123;</span><br><span class="line">			ComboPooledDataSource ds = <span class="keyword">new</span> ComboPooledDataSource(); </span><br><span class="line">        	ds.setDriverClass(driver);</span><br><span class="line">			ds.setJdbcUrl(url);</span><br><span class="line">			ds.setUser(username); </span><br><span class="line">        	ds.setPassword(password); </span><br><span class="line">            <span class="keyword">return</span> ds;</span><br><span class="line">		&#125;<span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">			<span class="keyword">throw</span> <span class="keyword">new</span> RuntimeException(e);</span><br><span class="line">		&#125;</span><br><span class="line">  	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight properties"><table><tr><td class="code"><pre><span class="line"><span class="meta">jdbc.driver</span>=<span class="string">com.mysql.jdbc.Driver</span></span><br><span class="line"><span class="meta">jdbc.url</span>=<span class="string">jdbc:mysql://localhost:3306/spring_study</span></span><br><span class="line"><span class="meta">jdbc.username</span>=<span class="string">root</span></span><br><span class="line"><span class="meta">jdbc.password</span>=<span class="string">root</span></span><br></pre></td></tr></table></figure>
+
+<h4 id="12-Spring整合Junit"><a href="#12-Spring整合Junit" class="headerlink" title="12. Spring整合Junit"></a>12. Spring整合Junit</h4><figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="comment">//使用@RunWith 注解替换原有运行器</span></span><br><span class="line"><span class="meta">@RunWith</span>(SpringJUnit4ClassRunner<span class="class">.<span class="keyword">class</span>)</span></span><br><span class="line"><span class="class">//使用@<span class="title">ContextConfiguration</span> 指定 <span class="title">spring</span> 配置文件的位置</span></span><br><span class="line">//locations 属性:用于指定配置文件的位置。如果是类路径下，需要用classpath:表明 </span><br><span class="line"><span class="comment">//classes 属性:用于指定注解的类。当不使用 xml 配置时，需要用此属性指定注解类的位置。</span></span><br><span class="line"><span class="meta">@ContextConfiguration</span>(location=&#123;<span class="string">"classpath:bean.xml"</span>&#125;)</span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">AccountServiceTest</span></span>&#123;</span><br><span class="line">	<span class="comment">//使用@Autowired 给测试类中的变量注入数据</span></span><br><span class="line">  	<span class="meta">@Autowired</span></span><br><span class="line">  	<span class="keyword">private</span> IAccountService as;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="1-2-AOP的概念与作用"><a href="#1-2-AOP的概念与作用" class="headerlink" title="1.2 AOP的概念与作用"></a>1.2 AOP的概念与作用</h2><h3 id="1-2-1-AOP概述"><a href="#1-2-1-AOP概述" class="headerlink" title="1.2.1 AOP概述"></a>1.2.1 AOP概述</h3><h4 id="1-AOP："><a href="#1-AOP：" class="headerlink" title="1. AOP："></a>1. AOP：</h4><p>​    全称是 Aspect Oriented Programming 即：面向切面编程。简单的说它就是把我们程序重复的代码抽取出来，在需要执行的时候，使用动态代理的技术，在不修改源码的 基础上，对我们的已有方法进行增强。</p>
+<h4 id="2-AOP相关术语："><a href="#2-AOP相关术语：" class="headerlink" title="2. AOP相关术语："></a>2. AOP相关术语：</h4><p>​    Joinpoint（连接点 ）：</p>
+<p>​        所谓连接点是指那些被拦截到的点。在 spring 中,这些点指的是方法,因为 spring 只支持方法类型的 连接点。 </p>
+<p>​    Pointcut（切入点 ）：</p>
+<p>​        所谓切入点是指我们要对哪些 Joinpoint 进行拦截的定义。</p>
+<p>​    Advice（通知/增强）: </p>
+<p>​        所谓通知是指拦截到 Joinpoint 之后所要做的事情就是通知。 通知的类型:前置通知,后置通知,异常通知,最终通知,环绕通知。</p>
+<p>​     Introduction（引介 ）：</p>
+<p>​        引介是一种特殊的通知在不修改类代码的前提下, Introduction 可以在运行期为类动态地添加一些方 法或 Field。</p>
+<p>​    Target（目标对象）：</p>
+<p>​        代理的目标对象。 </p>
+<p>​    Weaving（织入 ）：</p>
+<p>​        是指把增强应用到目标对象来创建新的代理对象的过程。 spring 采用动态代理织入，而 AspectJ 采用编译期织入和类装载期织入。</p>
+<p>​     Proxy（代理） ：</p>
+<p>​        一个类被 AOP 织入增强后，就产生一个结果代理类。</p>
+<pre><code>Aspect（切面）: </code></pre><p>​        是切入点和通知(引介)的结合。</p>
+<h3 id="1-2-2-spring中基于XML的AOP"><a href="#1-2-2-spring中基于XML的AOP" class="headerlink" title="1.2.2 spring中基于XML的AOP"></a>1.2.2 spring中基于XML的AOP</h3><h4 id="1-声明-aop-配置"><a href="#1-声明-aop-配置" class="headerlink" title="1. 声明 aop 配置"></a>1. 声明 aop 配置</h4><figure class="highlight xml"><table><tr><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">aop:config</span>&gt;</span><span class="tag">&lt;/<span class="name">aop:config</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<h4 id="2-配置切面"><a href="#2-配置切面" class="headerlink" title="2. 配置切面"></a>2. 配置切面</h4><figure class="highlight xml"><table><tr><td class="code"><pre><span class="line"><span class="comment">&lt;!-- id : 给切面提供一个唯一标识。</span></span><br><span class="line"><span class="comment">	 ref: 引用配置好的通知类 bean 的 id。 --&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">aop:aspect</span> <span class="attr">id</span>=<span class="string">"txAdvice"</span> <span class="attr">ref</span>=<span class="string">"txManager"</span>&gt;</span><span class="tag">&lt;/<span class="name">aop:aspect</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<h4 id="3-配置切入点表达式"><a href="#3-配置切入点表达式" class="headerlink" title="3. 配置切入点表达式"></a>3. 配置切入点表达式</h4><figure class="highlight xml"><table><tr><td class="code"><pre><span class="line"><span class="comment">&lt;!-- expression: 用于定义切入点表达式。</span></span><br><span class="line"><span class="comment">	 id: 用于给切入点表达式提供一个唯一标识 --&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">aop:pointcut</span> <span class="attr">expression</span>=<span class="string">"execution(</span></span></span><br><span class="line"><span class="tag"><span class="string">public void com.itheima.service.impl.AccountServiceImpl.transfer(java.lang.String, java.lang.String, java.lang.Float))"</span> <span class="attr">id</span>=<span class="string">"pt1"</span>/&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>​    通常情况下，我们都是对业务层的方法进行增强，所以切入点表达式都是切到业务层实现类。</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">execution(* com.itheima.service.impl.*.*(..))</span><br></pre></td></tr></table></figure>
+
+<h4 id="4-配置对应的通知类型"><a href="#4-配置对应的通知类型" class="headerlink" title="4. 配置对应的通知类型"></a>4. 配置对应的通知类型</h4><figure class="highlight xml"><table><tr><td class="code"><pre><span class="line"><span class="comment">&lt;!-- method:用于指定通知类中的增强方法名称 </span></span><br><span class="line"><span class="comment">	 ponitcut-ref:用于指定切入点的表达式的引用 </span></span><br><span class="line"><span class="comment">	 poinitcut:用于指定切入点表达式 --&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">aop:before</span> <span class="attr">method</span>=<span class="string">"beginTransaction"</span> <span class="attr">pointcut-ref</span>=<span class="string">"pt1"</span>/&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">aop:after-returning</span> <span class="attr">method</span>=<span class="string">"commit"</span> <span class="attr">pointcut-ref</span>=<span class="string">"pt1"</span>/&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">aop:after-throwing</span> <span class="attr">method</span>=<span class="string">"rollback"</span> <span class="attr">pointcut-ref</span>=<span class="string">"pt1"</span>/&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">aop:after</span> <span class="attr">method</span>=<span class="string">"release"</span> <span class="attr">pointcut-ref</span>=<span class="string">"pt1"</span>/&gt;</span></span><br></pre></td></tr></table></figure>
+
+<h4 id="5-环绕通知"><a href="#5-环绕通知" class="headerlink" title="5. 环绕通知"></a>5. 环绕通知</h4><figure class="highlight xml"><table><tr><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">aop:around</span> <span class="attr">method</span>=<span class="string">"transactionAround"</span> <span class="attr">pointcut-ref</span>=<span class="string">"pt1"</span>/&gt;</span></span><br></pre></td></tr></table></figure>
+
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="comment">//spring 框架为我们提供了一个接口:ProceedingJoinPoint，它可以作为环绕通知的方法参数。</span></span><br><span class="line"><span class="comment">//在环绕通知执行时，spring 框架会为我们提供该接口的实现类对象，我们直接使用就行。</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> Object <span class="title">transactionAround</span><span class="params">(ProceedingJoinPoint pjp)</span> </span>&#123;</span><br><span class="line">		<span class="comment">//定义返回值</span></span><br><span class="line">		Object rtValue = <span class="keyword">null</span>;</span><br><span class="line">		<span class="keyword">try</span> &#123;</span><br><span class="line">			<span class="comment">//获取方法执行所需的参数</span></span><br><span class="line">			Object[] args = pjp.getArgs(); <span class="comment">//前置通知:开启事务</span></span><br><span class="line">			beginTransaction();</span><br><span class="line">			<span class="comment">//执行方法</span></span><br><span class="line">			rtValue = pjp.proceed(args); <span class="comment">//后置通知:提交事务</span></span><br><span class="line">			commit();</span><br><span class="line">		&#125;<span class="keyword">catch</span>(Throwable e) &#123; <span class="comment">//异常通知:回滚事务 </span></span><br><span class="line">      		rollback(); </span><br><span class="line">      		e.printStackTrace();</span><br><span class="line">		&#125;<span class="keyword">finally</span> &#123; <span class="comment">//最终通知:释放资源 release();</span></span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">return</span> rtValue;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="1-2-3-基于注解的AOP配置"><a href="#1-2-3-基于注解的AOP配置" class="headerlink" title="1.2.3 基于注解的AOP配置"></a>1.2.3 基于注解的AOP配置</h3><h4 id="在-spring-配置文件中开启-spring-对注解-AOP-的支持"><a href="#在-spring-配置文件中开启-spring-对注解-AOP-的支持" class="headerlink" title="在 spring 配置文件中开启 spring 对注解 AOP 的支持"></a>在 spring 配置文件中开启 spring 对注解 AOP 的支持</h4><figure class="highlight xml"><table><tr><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">aop:aspectj-autoproxy</span>/&gt;</span></span><br></pre></td></tr></table></figure>
+
+<h4 id="不使用xml的配置方式"><a href="#不使用xml的配置方式" class="headerlink" title="不使用xml的配置方式"></a>不使用xml的配置方式</h4><figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="meta">@EnableAspectJAutoProxy</span></span><br></pre></td></tr></table></figure>
+
+<h4 id="1-在通知类上使用-Aspect-注解声明为切面"><a href="#1-在通知类上使用-Aspect-注解声明为切面" class="headerlink" title="1. 在通知类上使用@Aspect 注解声明为切面"></a>1. 在通知类上使用@Aspect 注解声明为切面</h4><p>​    作用：把当前类声明为切面</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="meta">@Component</span>(<span class="string">"txManager"</span>)</span><br><span class="line"><span class="meta">@Aspect</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">TransactionManager</span> </span>&#123;&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="2-在增强的方法上使用注解配置通知"><a href="#2-在增强的方法上使用注解配置通知" class="headerlink" title="2. 在增强的方法上使用注解配置通知"></a>2. 在增强的方法上使用注解配置通知</h4><p>​    @Before @AfterReturning @AfterThrowing @After</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="meta">@Before</span>(<span class="string">"execution(* com.itheima.service.impl.*.*(..))"</span>)</span><br><span class="line"><span class="meta">@AfterReturning</span>(<span class="string">"execution(* com.itheima.service.impl.*.*(..))"</span>)</span><br><span class="line"><span class="meta">@AfterThrowing</span>(<span class="string">"execution(* com.itheima.service.impl.*.*(..))"</span>)</span><br><span class="line"><span class="meta">@After</span>(<span class="string">"execution(* com.itheima.service.impl.*.*(..))"</span>)</span><br></pre></td></tr></table></figure>
+
+<h4 id="3-环绕通知注解配置"><a href="#3-环绕通知注解配置" class="headerlink" title="3. 环绕通知注解配置"></a>3. 环绕通知注解配置</h4><figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="meta">@Around</span>(<span class="string">"execution(* com.itheima.service.impl.*.*(..))"</span>)</span><br></pre></td></tr></table></figure>
+
+<h4 id="4-切入点表达式注解"><a href="#4-切入点表达式注解" class="headerlink" title="4. 切入点表达式注解"></a>4. 切入点表达式注解</h4><figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="meta">@Pointcut</span>(<span class="string">"execution(* com.itheima.service.impl.*.*(..))"</span>) </span><br><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">pt1</span><span class="params">()</span> </span>&#123;&#125;</span><br><span class="line">-----------------------------------------------------------</span><br><span class="line"><span class="meta">@Around</span>(<span class="string">"pt1()"</span>)</span><br></pre></td></tr></table></figure>
+
+<h2 id="1-3-Spring中的事务控制"><a href="#1-3-Spring中的事务控制" class="headerlink" title="1.3 Spring中的事务控制"></a>1.3 Spring中的事务控制</h2><h3 id="1-3-1-Spring-中事务控制的-API-介绍"><a href="#1-3-1-Spring-中事务控制的-API-介绍" class="headerlink" title="1.3.1 Spring 中事务控制的 API 介绍"></a>1.3.1 Spring 中事务控制的 API 介绍</h3><h4 id="1-PlatformTransactionManager"><a href="#1-PlatformTransactionManager" class="headerlink" title="1. PlatformTransactionManager"></a>1. PlatformTransactionManager</h4><p>​    此接口是 spring 的事务管理器，它里面提供了我们常用的操作事务的方法。</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="comment">// 获取事务状态信息</span></span><br><span class="line"><span class="function">TransactionStatus <span class="title">getTransaction</span><span class="params">(TransactionDefinition definition)</span></span>;</span><br><span class="line"><span class="comment">// 提交事务</span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">commit</span><span class="params">(TransactionStatus status)</span></span>;</span><br><span class="line"><span class="comment">// 回滚事务</span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">rollback</span><span class="params">(TransactionStatus status)</span></span>;</span><br></pre></td></tr></table></figure>
+
+<p>​    真正管理事务的对象 org.springframework.jdbc.datasource.DataSourceTransactionManager，使用 Spring JDBC 或 iBatis 进行持久化数据时使用</p>
+<h4 id="2-TransactionDefinition"><a href="#2-TransactionDefinition" class="headerlink" title="2. TransactionDefinition"></a>2. TransactionDefinition</h4><p>​    它是事务的定义信息对象,里面有如下方法:</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="comment">// 获取事务名称对象</span></span><br><span class="line"><span class="function">String <span class="title">getName</span><span class="params">()</span></span>;</span><br><span class="line"><span class="comment">// 获取事务隔离级别</span></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">getIsolationLevel</span><span class="params">()</span></span>;</span><br><span class="line"><span class="comment">// 获取事务传播行为（默认值：REQUIRED）</span></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">getPropagationBehavior</span><span class="params">()</span></span>;</span><br><span class="line"><span class="comment">// 获取事务超时时间（默认-1）</span></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">getTimeout</span><span class="params">()</span></span>;</span><br><span class="line"><span class="comment">// 获取事务是否只读（建议查询时设为只读）</span></span><br><span class="line"><span class="function"><span class="keyword">boolean</span> <span class="title">isReadOnly</span><span class="params">()</span></span>;</span><br></pre></td></tr></table></figure>
+
+<h4 id="3-TransactionStatus"><a href="#3-TransactionStatus" class="headerlink" title="3. TransactionStatus"></a>3. TransactionStatus</h4><p>​    此接口提供的是事务具体的运行状态</p>
+<h3 id="1-3-2-基于-XML-的声明式事务控制"><a href="#1-3-2-基于-XML-的声明式事务控制" class="headerlink" title="1.3.2 基于 XML 的声明式事务控制"></a>1.3.2 基于 XML 的声明式事务控制</h3><h4 id="1-配置事务管理器"><a href="#1-配置事务管理器" class="headerlink" title="1. 配置事务管理器"></a>1. 配置事务管理器</h4><figure class="highlight xml"><table><tr><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">bean</span> <span class="attr">id</span>=<span class="string">"transactionManager"</span>  <span class="attr">class</span>=<span class="string">"org.springframework.jdbc.datasource.	DataSourceTransactionManager"</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="name">property</span> <span class="attr">name</span>=<span class="string">"dataSource"</span> <span class="attr">ref</span>=<span class="string">"dataSource"</span>&gt;</span><span class="tag">&lt;/<span class="name">property</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">bean</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<h4 id="2-配置事务的通知引用事务管理器"><a href="#2-配置事务的通知引用事务管理器" class="headerlink" title="2. 配置事务的通知引用事务管理器"></a>2. 配置事务的通知引用事务管理器</h4><figure class="highlight xml"><table><tr><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">tx:advice</span> <span class="attr">id</span>=<span class="string">"txAdvice"</span> <span class="attr">transaction-manager</span>=<span class="string">"transactionManager"</span>&gt;</span> <span class="tag">&lt;/<span class="name">tx:advice</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<h4 id="3-配置事务的属性"><a href="#3-配置事务的属性" class="headerlink" title="3. 配置事务的属性"></a>3. 配置事务的属性</h4><figure class="highlight xml"><table><tr><td class="code"><pre><span class="line"><span class="comment">&lt;!--在 tx:advice 标签内部 配置事务的属性 --&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">tx:attributes</span>&gt;</span></span><br><span class="line"><span class="comment">&lt;!-- 指定方法名称:是业务核心方法</span></span><br><span class="line"><span class="comment">	read-only:是否是只读事务。默认 false，不只读。 </span></span><br><span class="line"><span class="comment">	isolation:指定事务的隔离级别。默认值是使用数据库的默认隔离级别。</span></span><br><span class="line"><span class="comment">	propagation:指定事务的传播行为。</span></span><br><span class="line"><span class="comment">	timeout:指定超时时间。默认值为:-1。永不超时。</span></span><br><span class="line"><span class="comment">	rollback-for:用于指定一个异常，当执行产生该异常时，事务回滚。产生其他异常 ，事务不回滚。没有默认值，任何异常都回滚。</span></span><br><span class="line"><span class="comment">	no-rollback-for:用于指定一个异常，当产生该异常时，事务不回滚，产生其他异常时，事务回滚。没有默认值，任何异常都回滚。--&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="name">tx:method</span> <span class="attr">name</span>=<span class="string">"*"</span> <span class="attr">read-only</span>=<span class="string">"false"</span> <span class="attr">propagation</span>=<span class="string">"REQUIRED"</span>/&gt;</span> </span><br><span class="line">  <span class="tag">&lt;<span class="name">tx:method</span> <span class="attr">name</span>=<span class="string">"find*"</span> <span class="attr">read-only</span>=<span class="string">"true"</span> <span class="attr">propagation</span>=<span class="string">"SUPPORTS"</span>/&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">tx:attributes</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<h4 id="4-配置-AOP-切入点表达式"><a href="#4-配置-AOP-切入点表达式" class="headerlink" title="4. 配置 AOP 切入点表达式"></a>4. 配置 AOP 切入点表达式</h4><figure class="highlight xml"><table><tr><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">aop:config</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="name">aop:pointcut</span> <span class="attr">expression</span>=<span class="string">"execution(* com.itheima.service.impl.*.*(..))"</span> <span class="attr">id</span>=<span class="string">"pt1"</span>/&gt;</span> <span class="tag">&lt;/<span class="name">aop:config</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<h4 id="5-配置切入点表达式和事务通知的对应关系"><a href="#5-配置切入点表达式和事务通知的对应关系" class="headerlink" title="5. 配置切入点表达式和事务通知的对应关系"></a>5. 配置切入点表达式和事务通知的对应关系</h4><figure class="highlight xml"><table><tr><td class="code"><pre><span class="line"><span class="comment">&lt;!-- 在 aop:config 标签内部:建立事务的通知和切入点表达式的关系 --&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">aop:advisor</span> <span class="attr">advice-ref</span>=<span class="string">"txAdvice"</span> <span class="attr">pointcut-ref</span>=<span class="string">"pt1"</span>/&gt;</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="1-3-3-基于注解的声明式事务控制"><a href="#1-3-3-基于注解的声明式事务控制" class="headerlink" title="1.3.3 基于注解的声明式事务控制"></a>1.3.3 基于注解的声明式事务控制</h3><h4 id="在配置文件中开启-spring-对注解事务的支持"><a href="#在配置文件中开启-spring-对注解事务的支持" class="headerlink" title="在配置文件中开启 spring 对注解事务的支持"></a>在配置文件中开启 spring 对注解事务的支持</h4><figure class="highlight xml"><table><tr><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">tx:annotation-driven</span> <span class="attr">transaction-manager</span>=<span class="string">"transactionManager"</span>/&gt;</span></span><br><span class="line">```v</span><br><span class="line"></span><br><span class="line">#### 不使用xml的配置方式</span><br><span class="line"></span><br><span class="line">```java</span><br><span class="line">@EnableTransactionManagement</span><br></pre></td></tr></table></figure>
+
+<h4 id="在业务层使用-Transactional-注解"><a href="#在业务层使用-Transactional-注解" class="headerlink" title="在业务层使用@Transactional 注解"></a>在业务层使用@Transactional 注解</h4><figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="meta">@Transactional</span>(readOnly=<span class="keyword">true</span>,propagation=Propagation.SUPPORTS)</span><br></pre></td></tr></table></figure>
+
+]]></content>
+      <categories>
+        <category>java</category>
+      </categories>
+      <tags>
+        <tag>框架</tag>
+        <tag>Java</tag>
+      </tags>
+  </entry>
+</search>

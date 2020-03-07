@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title>my blog</title>
+  <icon>101.200.154.102/icon.png</icon>
+  
+  <link href="/atom.xml" rel="self"/>
+  
+  <link href="101.200.154.102/"/>
+  <updated>2020-03-07T19:43:20.887Z</updated>
+  <id>101.200.154.102/</id>
+  
+  <author>
+    <name>slovebarca</name>
+    
+  </author>
+  
+  <generator uri="https://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>docker学习笔记</title>
+    <link href="101.200.154.102/2020/03/08/docker%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/"/>
+    <id>101.200.154.102/2020/03/08/docker%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/</id>
+    <published>2020-03-08T03:28:53.000Z</published>
+    <updated>2020-03-07T19:43:20.887Z</updated>
+    
+    <summary type="html">
+    
+      
+      
+        
+        
+          &lt;h2 id=&quot;Ubuntu安装docker的步骤&quot;&gt;&lt;a href=&quot;#Ubuntu安装docker的步骤&quot; class=&quot;headerlink&quot; title=&quot;Ubuntu安装docker的步骤&quot;&gt;&lt;/a&gt;Ubuntu安装docker的步骤&lt;/h2&gt;&lt;figure
+        
+      
+    
+    </summary>
+    
+    
+    
+      <category term="ubuntu" scheme="101.200.154.102/tags/ubuntu/"/>
+    
+      <category term="docker" scheme="101.200.154.102/tags/docker/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>SpringMVC学习笔记</title>
+    <link href="101.200.154.102/2020/03/05/SpringMVC%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/"/>
+    <id>101.200.154.102/2020/03/05/SpringMVC%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/</id>
+    <published>2020-03-05T03:29:59.000Z</published>
+    <updated>2020-03-06T17:10:43.000Z</updated>
+    
+    <summary type="html">
+    
+      &lt;h2 id=&quot;1-1-关于三层架构和-MVC&quot;&gt;&lt;a href=&quot;#1-1-关于三层架构和-MVC&quot; class=&quot;headerlink&quot; title=&quot;1.1 关于三层架构和 MVC&quot;&gt;&lt;/a&gt;1.1 关于三层架构和 MVC&lt;/h2&gt;&lt;h3 id=&quot;1-1-1-三层架构&quot;&gt;&lt;a href=&quot;#1-1-1-三层架构&quot; class=&quot;headerlink&quot; title=&quot;1.1.1 三层架构&quot;&gt;&lt;/a&gt;1.1.1 三层架构&lt;/h3&gt;&lt;h4 id=&quot;1-表现层&quot;&gt;&lt;a href=&quot;#1-表现层&quot; class=&quot;headerlink&quot; title=&quot;1. 表现层&quot;&gt;&lt;/a&gt;1. 表现层&lt;/h4&gt;&lt;p&gt;&amp;emsp;&amp;emsp;也就是我们常说的 web 层。它负责接收客户端请求，向客户端响应结果，通常客户端使用 http 协议请求 web 层，web 需要接收 http 请求，完成 http 响应。&lt;/p&gt;
+    
+    </summary>
+    
+    
+      <category term="java" scheme="101.200.154.102/categories/java/"/>
+    
+    
+      <category term="java" scheme="101.200.154.102/tags/java/"/>
+    
+      <category term="框架" scheme="101.200.154.102/tags/%E6%A1%86%E6%9E%B6/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>Spring学习笔记</title>
+    <link href="101.200.154.102/2020/03/05/Spring%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/"/>
+    <id>101.200.154.102/2020/03/05/Spring%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/</id>
+    <published>2020-03-04T23:36:01.000Z</published>
+    <updated>2020-03-06T17:10:43.000Z</updated>
+    
+    <summary type="html">
+    
+      &lt;h2 id=&quot;1-1-IOC的概念和作用&quot;&gt;&lt;a href=&quot;#1-1-IOC的概念和作用&quot; class=&quot;headerlink&quot; title=&quot;1.1 IOC的概念和作用&quot;&gt;&lt;/a&gt;1.1 IOC的概念和作用&lt;/h2&gt;&lt;h3 id=&quot;1-1-1-控制反转-Inversion-Of-Contorl&quot;&gt;&lt;a href=&quot;#1-1-1-控制反转-Inversion-Of-Contorl&quot; class=&quot;headerlink&quot; title=&quot;1.1.1 控制反转-Inversion Of Contorl&quot;&gt;&lt;/a&gt;1.1.1 控制反转-Inversion Of Contorl&lt;/h3&gt;&lt;p&gt;​    控制反转（IOC）把创建对象的权利交给框架，是框架的重要特征，并非面向对象编程的专用术语。它包括依赖注入（Dependency Injection）和依赖查找（Dependency Lookup）。&lt;/p&gt;
+&lt;p&gt;​    ioc的作用：消减计算机程序的耦合（解除我们代码中的依赖关系）。&lt;/p&gt;
+    
+    </summary>
+    
+    
+      <category term="java" scheme="101.200.154.102/categories/java/"/>
+    
+    
+      <category term="框架" scheme="101.200.154.102/tags/%E6%A1%86%E6%9E%B6/"/>
+    
+      <category term="Java" scheme="101.200.154.102/tags/Java/"/>
+    
+  </entry>
+  
+</feed>
